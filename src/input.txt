@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// comment 1
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Diagram {
+  id     String  @id @default(uuid())
+  name   String
+  schema Schema?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("diagrams")
+}
+
+// comment 2
+
+model Schema { // comment 3
+  id            String         @id @default(uuid())
+  table         Table[]
+  // comment 4
+  diagram       Diagram        @relation(fields: [diagram_id], references: [id], onDelete: Cascade)
+  diagram_id    String         @unique
+  relationships Relationship[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("schemas")
+}
+
+model Table {
+  id        String   @id @default(uuid())
+  name      String
+  left      String
+  top       String
+  color     String
+  schema_id String
+  schema    Schema   @relation(fields: [schema_id], references: [id], onDelete: Cascade)
+  comment   String?
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt // comment 5
+  columns   Column[]
+
+  @@index([schema_id])
+  @@map("tables")
+}
+
+model Relationship {
+  id               String @id @default(uuid())
+  schema_id        String
+  schema           Schema @relation(fields: [schema_id], references: [id], onDelete: Cascade)
+  source_column_id String
+  target_column_id String
+  type             String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schema_id])
+  @@map("relationships")
+}
+
+model Column {
+  id                String   @id @default(uuid())
+  name              String
+  table_id          String
+  table             Table    @relation(fields: [table_id], references: [id], onDelete: Cascade)
+  data_type_id      String
+  data_type         DataType @relation(fields: [data_type_id], references: [id], onDelete: Cascade)
+  order             Int
+  default_value     String?
+  comment           String?
+  is_primary_key    Boolean  @default(false)
+  is_foreign_key    Boolean  @default(false)
+  is_unique_key     Boolean  @default(false)
+  is_nullable       Boolean  @default(false)
+  is_auto_increment Boolean  @default(false)
+  is_unsigned       Boolean  @default(false)
+  is_enum           Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([table_id])
+  @@index([data_type_id])
+  @@map("columns")
+}
+
+model DataType {
+  id      String   @id @default(uuid())
+  name    String
+  columns Column[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("data_types")
+} // comment 6
+// comment 7
